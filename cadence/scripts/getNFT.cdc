@@ -2,11 +2,23 @@ import MosaicCreator from "MosaicCreator"
 
 pub struct NFTDetails {
     pub let id: UInt64
-    pub let collection: String
+    pub let description: String
+    pub let ownerAddress: Address
+    pub let collectionPath: String
+    pub let collectionCapabilityPath: String
 
-    init(id: UInt64, collection: String) {
+    init(
+        id: UInt64,
+        description: String,
+        ownerAddress: Address,
+        collectionPath: String,
+        collectionCapabilityPath: String
+    ) {
         self.id = id
-        self.collection = collection
+        self.description = description
+        self.ownerAddress = ownerAddress
+        self.collectionPath = collectionPath
+        self.collectionCapabilityPath = collectionCapabilityPath
     }
 }
 
@@ -24,11 +36,14 @@ pub fun main(account: Address, nftID: UInt64): NFTDetails {
     // Debug statement to confirm nftRef is not nil
     log("Successfully borrowed NFT reference")
 
-    let id = nftRef.id
-    let collection = nftRef.data.collection
+    // Get the NFT details from the global mapping
+    let nftData = MosaicCreator.nftToData[nftID] ?? panic("Could not find NFT data")
 
     return NFTDetails(
-        id: id,
-        collection: collection
+        id: nftID,
+        description: nftData.description,
+        ownerAddress: nftData.ownerAddress,
+        collectionPath: nftData.collectionPath,
+        collectionCapabilityPath: nftData.collectionCapabilityPath
     )
 }

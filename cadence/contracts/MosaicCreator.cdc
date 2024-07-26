@@ -13,6 +13,8 @@ pub contract MosaicCreator: NonFungibleToken {
     pub var mosaicNFTMapping: {UInt32: [UInt64]}
     pub var nextMosaicID: UInt32
     pub var totalSupply: UInt64
+    pub var nftToDescription: {UInt64: String}
+    pub var nftToData: {UInt64: NFTData}
 
     pub struct MosaicData {
         pub let mosaicID: UInt32
@@ -36,6 +38,7 @@ pub contract MosaicCreator: NonFungibleToken {
 
         init(collection: String, size: UInt64) {
             self.mosaicID = MosaicCreator.nextMosaicID
+            MosaicCreator.nextMosaicID = MosaicCreator.nextMosaicID + 1
             self.collection = collection
             self.size = size
             self.locked = false
@@ -57,21 +60,50 @@ pub contract MosaicCreator: NonFungibleToken {
     }
 
     pub struct NFTData {
-        pub let collection: String
+        pub let description: String
+        pub let ownerAddress: Address
+        pub let collectionPath: String
+        pub let collectionCapabilityPath: String
 
-        init(collection: String) {
-            self.collection = collection
+        init(description: String, ownerAddress: Address, collectionPath: String, collectionCapabilityPath: String) {
+            self.description = description
+            self.ownerAddress = ownerAddress
+            self.collectionPath = collectionPath
+            self.collectionCapabilityPath = collectionCapabilityPath
         }
     }
 
     pub resource NFT: NonFungibleToken.INFT {
         pub let id: UInt64
-        pub let data: NFTData
+        pub var description: String
+        pub var ownerAddress: Address
+        pub var collectionPath: String
+        pub var collectionCapabilityPath: String
 
-        init(collection: String) {
-            MosaicCreator.totalSupply = MosaicCreator.totalSupply + 1
+        init(description: String, ownerAddress: Address, collectionPath: String, collectionCapabilityPath: String) {
             self.id = MosaicCreator.totalSupply
-            self.data = NFTData(collection: collection)
+            MosaicCreator.totalSupply = MosaicCreator.totalSupply + 1
+            self.description = description
+            self.ownerAddress = ownerAddress
+            self.collectionPath = collectionPath
+            self.collectionCapabilityPath = collectionCapabilityPath
+            MosaicCreator.nftToDescription[self.id] = description
+            MosaicCreator.nftToData[self.id] = NFTData(description: description, ownerAddress: ownerAddress, collectionPath: collectionPath, collectionCapabilityPath: collectionCapabilityPath)
+        }
+
+        pub fun updateDescription(newDescription: String) {
+            self.description = newDescription
+            MosaicCreator.nftToDescription[self.id] = newDescription
+            let nftData = MosaicCreator.nftToData[self.id]!
+            MosaicCreator.nftToData[self.id] = NFTData(description: newDescription, ownerAddress: nftData.ownerAddress, collectionPath: nftData.collectionPath, collectionCapabilityPath: nftData.collectionCapabilityPath)
+        }
+
+        pub fun updateMetadata(newOwnerAddress: Address, newCollectionPath: String, newCollectionCapabilityPath: String) {
+            self.ownerAddress = newOwnerAddress
+            self.collectionPath = newCollectionPath
+            self.collectionCapabilityPath = newCollectionCapabilityPath
+            let nftData = MosaicCreator.nftToData[self.id]!
+            MosaicCreator.nftToData[self.id] = NFTData(description: nftData.description, ownerAddress: newOwnerAddress, collectionPath: newCollectionPath, collectionCapabilityPath: newCollectionCapabilityPath)
         }
 
         destroy() {
@@ -82,7 +114,6 @@ pub contract MosaicCreator: NonFungibleToken {
     pub resource Admin {
         pub fun createMosaic(collection: String, size: UInt64): UInt32 {
             var newMosaic <- create Mosaic(collection: collection, size: size)
-            MosaicCreator.nextMosaicID = MosaicCreator.nextMosaicID + 1
             let newID = newMosaic.mosaicID
             MosaicCreator.mosaics[newID] <-! newMosaic
             MosaicCreator.mosaicNFTMapping[newID] = []
@@ -91,25 +122,22 @@ pub contract MosaicCreator: NonFungibleToken {
         }
 
         pub fun addTile(mosaicID: UInt32, nftID: UInt64) {
-        let mosaicRef = self.borrowMosaic(mosaicID: mosaicID)
-            ?? panic("Mosaic with the specified ID does not exist")
-
-        // Append the NFT ID to the mosaic's list of NFTs
-        self.mosaicNFTMapping[mosaicID]!.append(nftID)
-        emit TileAddedToMosaic(mosaicID: mosaicID, nftID: nftID)
-    }
+            // Append the NFT ID to the mosaic's list of NFTs
+            MosaicCreator.mosaicNFTMapping[mosaicID]?.append(nftID)
+                ?? panic("Mosaic with the specified ID does not exist")
+            emit TileAddedToMosaic(mosaicID: mosaicID, nftID: nftID)
+        }
 
         pub fun borrowMosaic(mosaicID: UInt32): &Mosaic {
-        pre { self.mosaics[mosaicID] != nil: "Cannot borrow Mosaic: The Mosaic doesn't exist"; }
-        return (&self.mosaics[mosaicID] as &Mosaic?)!
-    }
+            return (&MosaicCreator.mosaics[mosaicID] as &Mosaic?)!
+        }
 
-    pub fun getMosaicNFTMapping(mosaicID: UInt32): [UInt64]? {
-        return self.mosaicNFTMapping[mosaicID]
-    }
+        pub fun getMosaicNFTMapping(mosaicID: UInt32): [UInt64]? {
+            return MosaicCreator.mosaicNFTMapping[mosaicID]
+        }
 
-        pub fun mintNFT(collection: String, recipient: &{MosaicCreator.MosaicCollectionPublic}) {
-            let newNFT <- create MosaicCreator.NFT(collection: collection)
+        pub fun mintNFT(description: String, recipient: &{MosaicCreator.MosaicCollectionPublic}, ownerAddress: Address, collectionPath: String, collectionCapabilityPath: String) {
+            let newNFT <- create MosaicCreator.NFT(description: description, ownerAddress: ownerAddress, collectionPath: collectionPath, collectionCapabilityPath: collectionCapabilityPath)
             recipient.deposit(token: <-newNFT)
         }
     }
@@ -156,23 +184,23 @@ pub contract MosaicCreator: NonFungibleToken {
         }
 
         pub fun borrowNFT(id: UInt64): &NonFungibleToken.NFT {
-    return (&self.ownedNFTs[id] as &NonFungibleToken.NFT?)!
-}
+            return (&self.ownedNFTs[id] as &NonFungibleToken.NFT?)!
+        }
 
-pub fun borrowNFTSafe(id: UInt64): &NonFungibleToken.NFT? {
-    if let nftRef = &self.ownedNFTs[id] as &NonFungibleToken.NFT? {
-        return nftRef
-    }
-    return nil
-}
+        pub fun borrowNFTSafe(id: UInt64): &NonFungibleToken.NFT? {
+            if let nftRef = &self.ownedNFTs[id] as &NonFungibleToken.NFT? {
+                return nftRef
+            }
+            return nil
+        }
 
-pub fun borrowTile(id: UInt64): &MosaicCreator.NFT? {
-    if let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT? {
-        return ref as! &MosaicCreator.NFT
-    } else {
-        return nil
-    }
-}
+        pub fun borrowTile(id: UInt64): &MosaicCreator.NFT? {
+            if let ref = &self.ownedNFTs[id] as auth &NonFungibleToken.NFT? {
+                return ref as! &MosaicCreator.NFT
+            } else {
+                return nil
+            }
+        }
 
         pub fun destroyMoments(ids: [UInt64]) {
             for id in ids {
@@ -206,8 +234,10 @@ pub fun borrowTile(id: UInt64): &MosaicCreator.NFT? {
     init() {
         self.mosaics <- {}
         self.mosaicNFTMapping = {}
-        self.nextMosaicID = 1
+        self.nextMosaicID = 0
         self.totalSupply = 0
+        self.nftToDescription = {}
+        self.nftToData = {}
 
         self.account.save<@Collection>(<- create Collection(), to: /storage/MosaicCollection)
         self.account.link<&{MosaicCollectionPublic}>(/public/MosaicCollection, target: /storage/MosaicCollection)
