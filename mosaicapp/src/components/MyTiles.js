@@ -1,10 +1,31 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { fetchTopShotMoments } from "../flow/scripts";
 import { updateTileData } from "../flow/transactions";
 import ViewTile from "./ViewTile"; // Import ViewTile component
+import * as fcl from "@onflow/fcl";
 
 function MyTiles() {
   const [tileID, setTileID] = useState("");
   const [newDescription, setNewDescription] = useState("");
+  const [topShotMoments, setTopShotMoments] = useState([]);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    fcl.currentUser().subscribe(setUser);
+  }, []);
+
+  useEffect(() => {
+    const fetchMoments = async () => {
+      if (user && user.addr) {
+        const moments = await fetchTopShotMoments(user.addr);
+        const formattedMoments = Object.values(moments).map(
+          (item) => item[Object.keys(item)[0]]
+        );
+        setTopShotMoments(formattedMoments);
+      }
+    };
+    fetchMoments();
+  }, [user]);
 
   const handleUpdateTileData = async () => {
     await updateTileData(parseInt(tileID), newDescription);
@@ -35,6 +56,18 @@ function MyTiles() {
         >
           Update Tile Data
         </button>
+      </div>
+
+      <h3 className="text-xl font-semibold mb-2">My NBA Top Shot Moments</h3>
+      <div className="grid grid-cols-1 gap-4">
+        {topShotMoments.map((moment) => (
+          <div key={moment.id} className="p-4 bg-gray-800 rounded">
+            <p>ID: {moment.id}</p>
+            <p>Play ID: {moment.playID}</p>
+            <p>Set Name: {moment.setName}</p>
+            <p>Serial Number: {moment.serialNumber}</p>
+          </div>
+        ))}
       </div>
 
       {/* Add ViewTile component here */}
