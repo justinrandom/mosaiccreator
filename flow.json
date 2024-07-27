@@ -44,6 +44,13 @@
 				"emulator": "f8d6e0586b0a20c7"
 			}
 		},
+		"MosaicCreatorV1": {
+			"source": "cadence/contracts/MosaicCreatorV1.cdc",
+			"aliases": {
+				"emulator": "f8d6e0586b0a20c7",
+				"mainnet": "dbf7a2a1821c9ffa"
+			}
+		},
 		"Test": {
 			"source": "cadence/contracts/Test.cdc",
 			"aliases": {
@@ -64,13 +71,26 @@
 				"type": "file",
 				"location": "emulator-account.pkey"
 			}
+		},
+		"mainnet-account": {
+			"address": "dbf7a2a1821c9ffa",
+			"key": {
+				"type": "file",
+				"location": "mainnet-account.pkey"
+			}
 		}
 	},
 	"deployments": {
 		"emulator": {
 		"emulator-account": [
 		 
-		  "MosaicCreator"
+		  "MosaicCreatorV1"
+		]
+		},
+		"mainnet": {
+		"mainnet-account": [
+		 
+		  "MosaicCreatorV1"
 		]
 		}
 	}

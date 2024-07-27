@@ -20,3 +20,5 @@ flow scripts execute .\cadence\scripts\getNFTDescription.cdc 0
 flow transactions send ./cadence/transactions/updateMetadata.cdc 0 0xf8d6e0586b0a20c9 "this is a new collect path" "new collection cap"
 
 flow scripts execute .\cadence\scripts\getNFTData.cdc 0
+
+0x0e79f439f8fcb6f4
