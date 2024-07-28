@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import * as fcl from "@onflow/fcl";
-import NexusLogo from "../nexus.svg"; // Update with the actual path to the logo
+import Logo from "../FlowConnect.svg"; // Update with the actual path to the logo
 
 function Header({ user, logIn, logOut, toggleMenu }) {
   return (
@@ -13,7 +13,7 @@ function Header({ user, logIn, logOut, toggleMenu }) {
         ☰
       </button>
       <NavLink to="/" className="text-4xl font-bold hover:underline">
-        <img src={NexusLogo} alt="Nexus logo" className="h-14" />
+        <img src={Logo} alt="Nexus logo" className="h-14" />
       </NavLink>
       <div className="flex items-center space-x-4">
         {user.loggedIn ? (

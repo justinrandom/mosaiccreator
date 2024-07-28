@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import * as fcl from "@onflow/fcl";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import "./fclConfig";
 
 import Admin from "./components/Admin";
@@ -33,35 +33,32 @@ function App() {
   };
 
   return (
-    <Router>
-      <div className="bg-gray-900 text-white min-h-screen">
-        <Header
-          user={user}
-          logIn={logIn}
-          logOut={logOut}
-          toggleMenu={toggleMenu}
-        />
-        <NavigationMenu
-          isMenuOpen={isMenuOpen}
-          toggleMenu={toggleMenu}
-          user={user}
-          adminAddress={adminAddress}
-        />
-        <div
-          className={`transition-opacity duration-300 ${
-            isMenuOpen ? "opacity-50" : "opacity-100"
-          }`}
-        >
-          <Routes>
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/my-tiles" element={<MyTiles />} />
-            <Route path="/update-tile" element={<UpdateTile />} />{" "}
-            {/* Add UpdateTile route */}
-            <Route path="/" element={<Mosaic />} />
-          </Routes>
-        </div>
+    <div className="bg-gray-900 text-white min-h-screen">
+      <Header
+        user={user}
+        logIn={logIn}
+        logOut={logOut}
+        toggleMenu={toggleMenu}
+      />
+      <NavigationMenu
+        isMenuOpen={isMenuOpen}
+        toggleMenu={toggleMenu}
+        user={user}
+        adminAddress={adminAddress}
+      />
+      <div
+        className={`transition-opacity duration-300 ${
+          isMenuOpen ? "opacity-50" : "opacity-100"
+        }`}
+      >
+        <Routes>
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/my-tiles" element={<MyTiles />} />
+          <Route path="/update-tile" element={<UpdateTile />} />{" "}
+          <Route path="/" element={<Mosaic />} />
+        </Routes>
       </div>
-    </Router>
+    </div>
   );
 }
 
