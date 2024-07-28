@@ -1,0 +1,20 @@
+{
+  "files": {
+    "main.css": "/mosaiccreator/static/css/main.594710fb.css",
+    "main.js": "/mosaiccreator/static/js/main.56da8dc6.js",
+    "static/js/171.7e31986e.chunk.js": "/mosaiccreator/static/js/171.7e31986e.chunk.js",
+    "static/js/453.fda82c7b.chunk.js": "/mosaiccreator/static/js/453.fda82c7b.chunk.js",
+    "static/js/126.79521fac.chunk.js": "/mosaiccreator/static/js/126.79521fac.chunk.js",
+    "static/media/nexus.svg": "/mosaiccreator/static/media/nexus.e1acbc34f1781f80f6172ebf886414a9.svg",
+    "index.html": "/mosaiccreator/index.html",
+    "main.594710fb.css.map": "/mosaiccreator/static/css/main.594710fb.css.map",
+    "main.56da8dc6.js.map": "/mosaiccreator/static/js/main.56da8dc6.js.map",
+    "171.7e31986e.chunk.js.map": "/mosaiccreator/static/js/171.7e31986e.chunk.js.map",
+    "453.fda82c7b.chunk.js.map": "/mosaiccreator/static/js/453.fda82c7b.chunk.js.map",
+    "126.79521fac.chunk.js.map": "/mosaiccreator/static/js/126.79521fac.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.594710fb.css",
+    "static/js/main.56da8dc6.js"
+  ]
+}
