@@ -1,5 +1,11 @@
-import React, { useState } from "react";
-import { createMosaic, mintTile, updateTileData } from "../flow/transactions";
+import React, { useState, useEffect } from "react";
+import {
+  createMosaic,
+  mintTile,
+  updateTileDescription,
+  updateTileMetadata,
+} from "../flow/transactions";
+import { fetchTileDetails } from "../flow/scripts"; // Make sure fetchTileDetails is imported
 
 function Admin() {
   const [mosaicCollection, setMosaicCollection] = useState("");
@@ -9,6 +15,18 @@ function Admin() {
   const [collectionCapabilityPath, setCollectionCapabilityPath] = useState("");
   const [updateTileID, setUpdateTileID] = useState("");
   const [newDescription, setNewDescription] = useState("");
+  const [viewTileID, setViewTileID] = useState("");
+  const [tileDetails, setTileDetails] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (viewTileID) {
+        const details = await fetchTileDetails(viewTileID);
+        setTileDetails(details);
+      }
+    };
+    fetchData();
+  }, [viewTileID]);
 
   const handleCreateMosaic = async () => {
     await createMosaic(mosaicCollection, parseInt(mosaicSize));
@@ -18,8 +36,13 @@ function Admin() {
     await mintTile(nftDescription, collectionPath, collectionCapabilityPath);
   };
 
-  const handleUpdateTileData = async () => {
-    await updateTileData(parseInt(updateTileID), newDescription);
+  const handleUpdateTileDescription = async () => {
+    await updateTileDescription(parseInt(updateTileID), newDescription);
+  };
+
+  const handleViewTileDetails = async () => {
+    const details = await fetchTileDetails(viewTileID);
+    setTileDetails(details);
   };
 
   return (
@@ -81,7 +104,7 @@ function Admin() {
       </div>
 
       <div className="mb-4">
-        <h3 className="text-xl font-semibold mb-2">Update Tile Data</h3>
+        <h3 className="text-xl font-semibold mb-2">Update Tile Description</h3>
         <input
           type="text"
           placeholder="Tile ID (UInt64)"
@@ -97,11 +120,40 @@ function Admin() {
           className="text-black p-2 mb-2 rounded w-full"
         />
         <button
-          onClick={handleUpdateTileData}
+          onClick={handleUpdateTileDescription}
           className="px-4 py-2 bg-blue-500 text-white hover:text-gray-300 rounded focus:outline-none"
         >
-          Update Tile Data
+          Update Tile Description
         </button>
+      </div>
+
+      <div className="mb-4">
+        <h3 className="text-xl font-semibold mb-2">View Tile Details</h3>
+        <input
+          type="text"
+          placeholder="Tile ID (UInt64)"
+          value={viewTileID}
+          onChange={(e) => setViewTileID(e.target.value)}
+          className="text-black p-2 mb-2 rounded w-full"
+        />
+        <button
+          onClick={handleViewTileDetails}
+          className="px-4 py-2 bg-blue-500 text-white hover:text-gray-300 rounded focus:outline-none"
+        >
+          View Tile
+        </button>
+
+        {tileDetails && (
+          <div className="mt-4 p-4 bg-gray-800 rounded">
+            <p>ID: {tileDetails.id}</p>
+            <p>Description: {tileDetails.description}</p>
+            <p>Owner Address: {tileDetails.ownerAddress}</p>
+            <p>Collection Path: {tileDetails.collectionPath}</p>
+            <p>
+              Collection Capability Path: {tileDetails.collectionCapabilityPath}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

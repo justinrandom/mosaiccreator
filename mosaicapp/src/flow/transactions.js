@@ -36,7 +36,7 @@ export async function mintTile(
 
       transaction(description: String, collectionPath: String, collectionCapabilityPath: String) {
         prepare(signer: AuthAccount) {
-          let adminRef = signer.borrow<&MosaicCreatorV1.Admin>(from: /storage/MosaicAdmin)
+          let adminRef = signer.borrow<&MosaicCreatorV1.Admin>(from: /storage/MosaicAdminV1)
             ?? panic("Could not borrow a reference to the Admin resource")
           let recipient = signer.getCapability(/public/MosaicCollectionV1)
             .borrow<&{MosaicCreatorV1.MosaicCollectionPublic}>()
@@ -65,10 +65,11 @@ export async function mintTile(
   return txId;
 }
 
-// Function to update tile data
-export async function updateTileData(tileID, newDescription) {
-  const txId = await fcl.send([
-    fcl.transaction`
+// Function to update tile description
+export async function updateTileDescription(tileID, newDescription) {
+  const txId = await fcl
+    .send([
+      fcl.transaction`
       import MosaicCreatorV1 from 0xdbf7a2a1821c9ffa
 
       transaction(tileID: UInt64, newDescription: String) {
@@ -81,9 +82,56 @@ export async function updateTileData(tileID, newDescription) {
         }
       }
     `,
+      fcl.args([
+        fcl.arg(tileID, fcl.t.UInt64),
+        fcl.arg(newDescription, fcl.t.String),
+      ]),
+      fcl.payer(fcl.authz),
+      fcl.proposer(fcl.authz),
+      fcl.authorizations([fcl.authz]),
+      fcl.limit(100),
+    ])
+    .then(fcl.decode);
+
+  return txId;
+}
+
+// Function to update tile metadata
+export async function updateTileMetadata(
+  tileID,
+  newOwnerAddress,
+  newCollectionPath,
+  newCollectionCapabilityPath
+) {
+  const txId = await fcl.send([
+    fcl.transaction`
+      import NonFungibleToken from 0x1d7e57aa55817448
+      import MosaicCreatorV1 from 0xdbf7a2a1821c9ffa
+
+      transaction(tileID: UInt64, newOwnerAddress: Address, newCollectionPath: String, newCollectionCapabilityPath: String) {
+        let nftRef: &MosaicCreatorV1.NFT
+
+        prepare(signer: AuthAccount) {
+          let collection = signer.borrow<&MosaicCreatorV1.Collection>(from: /storage/MosaicCollectionV1)
+            ?? panic("Could not borrow reference to the NFT collection")
+          self.nftRef = collection.borrowTile(id: tileID)
+            ?? panic("Could not borrow reference to the NFT")
+        }
+
+        execute {
+          self.nftRef.updateMetadata(
+            newOwnerAddress: newOwnerAddress,
+            newCollectionPath: newCollectionPath,
+            newCollectionCapabilityPath: newCollectionCapabilityPath
+          )
+        }
+      }
+    `,
     fcl.args([
       fcl.arg(tileID, fcl.t.UInt64),
-      fcl.arg(newDescription, fcl.t.String),
+      fcl.arg(newOwnerAddress, fcl.t.Address),
+      fcl.arg(newCollectionPath, fcl.t.String),
+      fcl.arg(newCollectionCapabilityPath, fcl.t.String),
     ]),
     fcl.payer(fcl.authz),
     fcl.proposer(fcl.authz),
