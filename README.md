@@ -22,8 +22,3 @@ flow transactions send ./cadence/transactions/updateMetadata.cdc 0 0xf8d6e0586b0
 flow scripts execute .\cadence\scripts\getNFTData.cdc 0
 
 0x0e79f439f8fcb6f4
-
-ToDo
-
-- add ability to update mosaic metadata
-  -redo the fields on the nfts
