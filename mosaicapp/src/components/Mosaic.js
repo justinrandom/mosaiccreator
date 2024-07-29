@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getMosaicDetails, getBatchNFTDetails } from "../getMosaicDetails";
+import { getMosaicDetails, getBatchNFTDetails } from "../flow/scripts";
 import Draggable from "react-draggable";
 import { FaPlus, FaMinus } from "react-icons/fa";
 

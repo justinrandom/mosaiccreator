@@ -24,7 +24,7 @@ function Header({ user, logIn, logOut, toggleMenu }) {
             </div>
             <button
               onClick={logOut}
-              className="px-4 py-2 bg-red-500 text-white hover:text-gray-300 rounded focus:outline-none"
+              className="px-4 py-2 bg-purple-800 text-white hover:text-gray-300 rounded focus:outline-none"
             >
               Log Out
             </button>

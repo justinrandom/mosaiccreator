@@ -8,7 +8,7 @@ import MyTiles from "./components/MyTiles";
 import Mosaic from "./components/Mosaic";
 import Header from "./components/Header";
 import NavigationMenu from "./components/NavigationMenu";
-import UpdateTile from "./components/UpdateTile"; // Import UpdateTile component
+import UpdateTile from "./components/MyTiles"; // Import UpdateTile component
 
 const adminAddress = "0xdbf7a2a1821c9ffa"; // Replace with your actual admin address
 
@@ -54,7 +54,7 @@ function App() {
         <Routes>
           <Route path="/admin" element={<Admin />} />
           <Route path="/my-tiles" element={<MyTiles />} />
-          <Route path="/update-tile" element={<UpdateTile />} />{" "}
+          <Route path="/update-tile" element={<UpdateTile />} />
           <Route path="/" element={<Mosaic />} />
         </Routes>
       </div>

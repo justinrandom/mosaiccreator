@@ -5,7 +5,7 @@ import {
   updateTileDescription,
   updateTileMetadata,
 } from "../flow/transactions";
-import { fetchTileDetails } from "../flow/scripts"; // Make sure fetchTileDetails is imported
+import { getMosaicDetails, getBatchNFTDetails } from "../flow/scripts"; // Ensure getMosaicDetails and getBatchNFTDetails are imported
 
 function Admin() {
   const [mosaicCollection, setMosaicCollection] = useState("");
@@ -13,20 +13,46 @@ function Admin() {
   const [nftDescription, setNftDescription] = useState("");
   const [collectionPath, setCollectionPath] = useState("");
   const [collectionCapabilityPath, setCollectionCapabilityPath] = useState("");
-  const [updateTileID, setUpdateTileID] = useState("");
-  const [newDescription, setNewDescription] = useState("");
-  const [viewTileID, setViewTileID] = useState("");
-  const [tileDetails, setTileDetails] = useState(null);
+  const [mosaicDetailsList, setMosaicDetailsList] = useState([]);
+  const [tileDetailsList, setTileDetailsList] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (viewTileID) {
-        const details = await fetchTileDetails(viewTileID);
-        setTileDetails(details);
+    const fetchAllMosaicDetails = async () => {
+      let id = 0;
+      const mosaicDetails = [];
+
+      while (true) {
+        try {
+          const details = await getMosaicDetails(id);
+          if (details) {
+            mosaicDetails.push(details);
+            id++;
+          } else {
+            break;
+          }
+        } catch (error) {
+          break; // Stop fetching when an error occurs (i.e., no more mosaics)
+        }
       }
+
+      setMosaicDetailsList(mosaicDetails);
     };
-    fetchData();
-  }, [viewTileID]);
+
+    fetchAllMosaicDetails();
+  }, []);
+
+  useEffect(() => {
+    const fetchAllTileDetails = async () => {
+      setLoading(true);
+      const ids = Array.from({ length: 100 }, (_, i) => i); // Assuming a maximum of 100 tiles for simplicity
+      const details = await getBatchNFTDetails(ids);
+      setTileDetailsList(Object.values(details));
+      setLoading(false);
+    };
+
+    fetchAllTileDetails();
+  }, []);
 
   const handleCreateMosaic = async () => {
     await createMosaic(mosaicCollection, parseInt(mosaicSize));
@@ -34,15 +60,6 @@ function Admin() {
 
   const handleMintTile = async () => {
     await mintTile(nftDescription, collectionPath, collectionCapabilityPath);
-  };
-
-  const handleUpdateTileDescription = async () => {
-    await updateTileDescription(parseInt(updateTileID), newDescription);
-  };
-
-  const handleViewTileDetails = async () => {
-    const details = await fetchTileDetails(viewTileID);
-    setTileDetails(details);
   };
 
   return (
@@ -104,55 +121,33 @@ function Admin() {
       </div>
 
       <div className="mb-4">
-        <h3 className="text-xl font-semibold mb-2">Update Tile Description</h3>
-        <input
-          type="text"
-          placeholder="Tile ID (UInt64)"
-          value={updateTileID}
-          onChange={(e) => setUpdateTileID(e.target.value)}
-          className="text-black p-2 mb-2 rounded w-full"
-        />
-        <input
-          type="text"
-          placeholder="New Description (String)"
-          value={newDescription}
-          onChange={(e) => setNewDescription(e.target.value)}
-          className="text-black p-2 mb-2 rounded w-full"
-        />
-        <button
-          onClick={handleUpdateTileDescription}
-          className="px-4 py-2 bg-blue-500 text-white hover:text-gray-300 rounded focus:outline-none"
-        >
-          Update Tile Description
-        </button>
+        <h3 className="text-xl font-semibold mb-2">Mosaic Details</h3>
+        {mosaicDetailsList.map((details, index) => (
+          <div key={index} className="mt-4 p-4 bg-gray-800 rounded">
+            <p>Mosaic ID: {details.mosaicID}</p>
+            <p>Collection: {details.collection}</p>
+            <p>Size: {details.size}</p>
+            <p>Locked: {details.locked.toString()}</p>
+          </div>
+        ))}
       </div>
 
       <div className="mb-4">
-        <h3 className="text-xl font-semibold mb-2">View Tile Details</h3>
-        <input
-          type="text"
-          placeholder="Tile ID (UInt64)"
-          value={viewTileID}
-          onChange={(e) => setViewTileID(e.target.value)}
-          className="text-black p-2 mb-2 rounded w-full"
-        />
-        <button
-          onClick={handleViewTileDetails}
-          className="px-4 py-2 bg-blue-500 text-white hover:text-gray-300 rounded focus:outline-none"
-        >
-          View Tile
-        </button>
-
-        {tileDetails && (
-          <div className="mt-4 p-4 bg-gray-800 rounded">
-            <p>ID: {tileDetails.id}</p>
-            <p>Description: {tileDetails.description}</p>
-            <p>Owner Address: {tileDetails.ownerAddress}</p>
-            <p>Collection Path: {tileDetails.collectionPath}</p>
-            <p>
-              Collection Capability Path: {tileDetails.collectionCapabilityPath}
-            </p>
-          </div>
+        <h3 className="text-xl font-semibold mb-2">Tile Details</h3>
+        {loading ? (
+          <p>Loading tile details...</p>
+        ) : (
+          tileDetailsList.map((details, index) => (
+            <div key={index} className="mt-4 p-4 bg-gray-800 rounded">
+              <p>ID: {details.id}</p>
+              <p>Description: {details.description}</p>
+              <p>Owner Address: {details.ownerAddress}</p>
+              <p>Collection Path: {details.collectionPath}</p>
+              <p>
+                Collection Capability Path: {details.collectionCapabilityPath}
+              </p>
+            </div>
+          ))
         )}
       </div>
     </div>

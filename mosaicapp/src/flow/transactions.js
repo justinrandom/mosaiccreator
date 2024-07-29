@@ -8,7 +8,7 @@ export async function createMosaic(collection, size) {
 
       transaction(collection: String, size: UInt64) {
         prepare(signer: AuthAccount) {
-          let adminRef = signer.borrow<&MosaicCreatorV1.Admin>(from: /storage/MosaicAdmin)
+          let adminRef = signer.borrow<&MosaicCreatorV1.Admin>(from: /storage/MosaicAdminV1)
             ?? panic("Could not borrow a reference to the Admin resource")
           adminRef.createMosaic(collection: collection, size: size)
         }
@@ -132,6 +132,45 @@ export async function updateTileMetadata(
       fcl.arg(newOwnerAddress, fcl.t.Address),
       fcl.arg(newCollectionPath, fcl.t.String),
       fcl.arg(newCollectionCapabilityPath, fcl.t.String),
+    ]),
+    fcl.payer(fcl.authz),
+    fcl.proposer(fcl.authz),
+    fcl.authorizations([fcl.authz]),
+    fcl.limit(100),
+  ]);
+
+  return txId;
+}
+
+// Function to send a tile to another user
+export async function sendTile(tileID, recipientAddress) {
+  const txId = await fcl.send([
+    fcl.transaction`
+      import MosaicCreatorV1 from 0xdbf7a2a1821c9ffa
+
+      transaction(tileID: UInt64, recipient: Address) {
+        let senderCollection: &MosaicCreatorV1.Collection
+        let recipientCollection: &{MosaicCreatorV1.MosaicCollectionPublic}
+
+        prepare(signer: AuthAccount) {
+          self.senderCollection = signer.borrow<&MosaicCreatorV1.Collection>(from: /storage/MosaicCollectionV1)
+            ?? panic("Could not borrow a reference to the sender's collection")
+
+          self.recipientCollection = getAccount(recipient).getCapability(/public/MosaicCollectionV1)
+            .borrow<&{MosaicCreatorV1.MosaicCollectionPublic}>()
+            ?? panic("Could not borrow a reference to the recipient's collection")
+        }
+
+        execute {
+          let tile <- self.senderCollection.withdraw(withdrawID: tileID)
+          self.recipientCollection.deposit(token: <-tile)
+          log("Tile sent successfully")
+        }
+      }
+    `,
+    fcl.args([
+      fcl.arg(tileID, fcl.t.UInt64),
+      fcl.arg(recipientAddress, fcl.t.Address),
     ]),
     fcl.payer(fcl.authz),
     fcl.proposer(fcl.authz),

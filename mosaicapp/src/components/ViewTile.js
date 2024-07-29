@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { getSingleNFTDetail } from "../getMosaicDetails";
+import { getSingleNFTDetail } from "../flow/scripts";
 
 function ViewTile() {
   const [tileID, setTileID] = useState("");

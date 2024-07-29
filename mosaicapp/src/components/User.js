@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { updateMetadata } from "../updateMetadata";
+import { updateMetadata } from "../../../archive/updateMetadata";
 
 function User() {
   const [nftID, setNftID] = useState("");
